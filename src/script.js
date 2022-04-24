@@ -13,25 +13,40 @@ const canvas = document.querySelector('canvas.webgl')
 const scene = new THREE.Scene()
 
 // Objects
-const geometry = new THREE.TorusGeometry( .7, .2, 16, 100 );
+const torusGeometry = new THREE.TorusGeometry( .7, .2, 16, 100 );
 
 // Materials
 
-const material = new THREE.MeshBasicMaterial()
-material.color = new THREE.Color(0xff0000)
+const torusMaterial = new THREE.MeshStandardMaterial()
+torusMaterial.color = new THREE.Color(0xffaa88)
 
 // Mesh
-const sphere = new THREE.Mesh(geometry,material)
-scene.add(sphere)
-
+const torus = new THREE.Mesh(torusGeometry,torusMaterial)
+torus.castShadow = true; //default is false
+torus.receiveShadow = true; //default is false
+scene.add(torus)
+//Create a plane that receives shadows (but does not cast them)
+const planeGeometry = new THREE.PlaneGeometry( 20, 20, 32, 32 );
+const planeMaterial = new THREE.MeshStandardMaterial( { color: 0x00ff00 } )
+const plane = new THREE.Mesh( planeGeometry, planeMaterial );
+plane.receiveShadow = true;
+plane.position.z = -10;
+scene.add( plane );
 // Lights
-
-const pointLight = new THREE.PointLight(0xffffff, 0.1)
-pointLight.position.x = 2
-pointLight.position.y = 3
-pointLight.position.z = 4
+const pointLight = new THREE.PointLight(0xffffff, 1)
+pointLight.position.x = 1
+pointLight.position.y = 2
+pointLight.position.z = 3
+pointLight.castShadow = true; // default false
+//Set up shadow properties for the light
+pointLight.shadow.mapSize.width = 5120; // default
+pointLight.shadow.mapSize.height = 5120; // default
+pointLight.shadow.camera.near = 0.5; // default
+pointLight.shadow.camera.far = 500; // default
 scene.add(pointLight)
-
+//Create a helper for the shadow camera (optional)
+const helper = new THREE.CameraHelper( pointLight.shadow.camera );
+scene.add( helper );
 /**
  * Sizes
  */
@@ -39,6 +54,7 @@ const sizes = {
     width: window.innerWidth,
     height: window.innerHeight
 }
+
 
 window.addEventListener('resize', () =>
 {
@@ -77,7 +93,8 @@ const renderer = new THREE.WebGLRenderer({
 })
 renderer.setSize(sizes.width, sizes.height)
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
-
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap; // default THREE.PCFShadowMap
 /**
  * Animate
  */
@@ -90,7 +107,7 @@ const tick = () =>
     const elapsedTime = clock.getElapsedTime()
 
     // Update objects
-    sphere.rotation.y = .5 * elapsedTime
+    torus.rotation.y = .5 * elapsedTime
 
     // Update Orbital Controls
     // controls.update()
